@@ -82,7 +82,7 @@ class PDFDocument(object):
 
         image_data_buffer = ffi.buffer(image_data, image_data_size)
         image = Image.frombytes(mode, (width, height), image_data_buffer, 'raw', 'BGRA')
-        image.info['dpi'] = dpi
+        image.info['dpi'] = (dpi, dpi)
 
         lib.delete_image_data(image_data)
         return image

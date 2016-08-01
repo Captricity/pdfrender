@@ -7,7 +7,8 @@ with open('src/pdfrender.cpp') as f:
 
     ffi.set_source('pdfrender._libpdfrender', f.read(),
                    extra_compile_args=extra_compile_args,
-                   extra_link_args=extra_link_args)
+                   extra_link_args=extra_link_args,
+                   source_extension='.cpp')
 
 ffi.cdef('''
 void* load_document_from_raw_data(const char* file_data, int file_data_length);
