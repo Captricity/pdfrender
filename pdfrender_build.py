@@ -2,12 +2,9 @@ from cffi import FFI
 ffi = FFI()
 
 with open('src/pdfrender.cpp') as f:
-    extra_compile_args = ['-std=c++1y']
-    extra_link_args = ['-lpoppler-cpp']
-
     ffi.set_source('pdfrender._libpdfrender', f.read(),
-                   extra_compile_args=extra_compile_args,
-                   extra_link_args=extra_link_args,
+                   extra_compile_args=['-std=c++1y'],
+                   libraries=['poppler-cpp'],
                    source_extension='.cpp')
 
 ffi.cdef('''
