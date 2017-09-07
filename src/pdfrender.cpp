@@ -9,12 +9,22 @@ extern "C"
 void* load_document_from_raw_data(const char* file_data, int file_data_length)
 {
     auto doc = poppler::document::load_from_raw_data(file_data, file_data_length);
+    if (doc && doc->is_locked())
+    {
+        delete doc;
+        doc = nullptr;
+    }
     return reinterpret_cast<void*>(doc);
 }
 
 void* load_document_from_file(const char* filename)
 {
     auto doc = poppler::document::load_from_file(filename);
+    if (doc && doc->is_locked())
+    {
+        delete doc;
+        doc = nullptr;
+    }
     return reinterpret_cast<void*>(doc);
 }
 

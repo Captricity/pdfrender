@@ -4,6 +4,7 @@ ffi = FFI()
 with open('src/pdfrender.cpp') as f:
     ffi.set_source('pdfrender._libpdfrender', f.read(),
                    extra_compile_args=['-std=c++1y'],
+                   library_dirs=['/usr/local/lib'],
                    libraries=['poppler-cpp'],
                    source_extension='.cpp')
 
