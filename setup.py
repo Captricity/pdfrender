@@ -40,7 +40,7 @@ class BuildExt(build_ext):
     def build_extensions(self):
         compiler_type = self.compiler.compiler_type
 
-        opts = []
+        opts = ['-O2']
         if sys.platform == 'darwin':
             opts += ['-stdlib=libc++', '-mmacosx-version-min=10.8']
 
@@ -60,8 +60,8 @@ setup(
     name='pdfrender',
     description='PDF Renderer',
     version='0.3.0',
-    setup_requires=['pybind11>=2.2.1'],
-    install_requires=['pybind11>=2.2.1'],
+    setup_requires=['pybind11>=2.2.1', 'Pillow>=4.3.0'],
+    install_requires=['pybind11>=2.2.1', 'Pillow>=4.3.0'],
     ext_modules=ext_modules,
     cmdclass={'build_ext': BuildExt},
     test_suite='tests',

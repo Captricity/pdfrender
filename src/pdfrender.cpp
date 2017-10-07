@@ -1,5 +1,5 @@
+#include <algorithm>
 #include <memory>
-#include <vector>
 #include <poppler/cpp/poppler-document.h>
 #include <poppler/cpp/poppler-page.h>
 #include <poppler/cpp/poppler-page-renderer.h>
@@ -14,22 +14,22 @@ public:
     static PDFDocument frombytes(py::buffer bytes)
     {
         py::buffer_info info = bytes.request();
-        vector<char> file_bytes(info.size);
-        std::copy_n(reinterpret_cast<char*>(info.ptr), info.size, file_bytes.data());
-        auto document = poppler::document::load_from_raw_data(file_bytes.data(), info.size);
+        char* const file_bytes = new char[info.size];
+        std::copy_n(reinterpret_cast<char*>(info.ptr), info.size, file_bytes);
+        auto document = poppler::document::load_from_raw_data(file_bytes, info.size);
         if (!document || document->is_locked())
-            throw std::invalid_argument("invalid pdf data");
+            throw std::invalid_argument("invalid pdf file");
 
-        return PDFDocument(document, move(file_bytes));
+        return PDFDocument(document, file_bytes);
     }
 
     static PDFDocument fromfile(const string& filename)
     {
         auto document = poppler::document::load_from_file(filename);
         if (!document || document->is_locked())
-            throw std::invalid_argument("invalid pdf data");
+            throw std::invalid_argument("invalid pdf file");
 
-        return PDFDocument(document, {});
+        return PDFDocument(document, nullptr);
     }
 
     PDFDocument(const PDFDocument& other) = delete;
@@ -49,7 +49,7 @@ public:
 
     void __exit__(py::object, py::object, py::object)
     {
-        this->file_bytes.clear();
+        this->file_bytes.reset();
         this->doc.reset();
         this->num_pages = 0;
     }
@@ -92,7 +92,11 @@ public:
         auto size = make_pair(image.width(), image.height());
         py::bytes buffer(image.data(), buffer_size);
         py::module Image = py::module::import("PIL.Image");
-        return Image.attr("frombytes")(mode, size, buffer, "raw", "BGRA");
+
+        auto pil_image = Image.attr("frombytes")(mode, size, buffer, "raw", "BGRA");
+        auto info = pil_image.attr("info");
+        info["dpi"] = make_pair(dpi, dpi);
+        return pil_image;
     }
 
     size_t size() const
@@ -101,13 +105,13 @@ public:
     }
 
 private:
-    PDFDocument(poppler::document* document, vector<char>&& file_bytes):
-        doc(document), num_pages(document->pages()), file_bytes(move(file_bytes))
+    PDFDocument(poppler::document* document, const char* file_bytes):
+        doc(document), num_pages(document->pages()), file_bytes(file_bytes)
     {}
 
     unique_ptr<poppler::document> doc;
     int num_pages = 0;
-    vector<char> file_bytes;
+    unique_ptr<const char[]> file_bytes;
 };
 
 
