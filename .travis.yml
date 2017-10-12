@@ -3,11 +3,16 @@ python:
     - "2.7"
     - "3.5"
 
+before_install:
+    - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+    - sudo apt-get -qq update
+    - sudo apt-get install -y gcc-5 g++-5 libpoppler-cpp-dev
+    - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 60 --slave /usr/bin/g++ g++ /usr/bin/g++-5
+
 install:
-    - pip install pybind11=2.2.1 Pillow=3.4.2
+    - pip install pybind11==2.2.1 Pillow==4.3.0
 
 script:
     - python setup.py test
 
 dist: trusty
-sudo: false
