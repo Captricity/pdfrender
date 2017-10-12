@@ -167,4 +167,8 @@ R"(Renders a page of the PDF document as a PIL image.
         .def("__exit__", &PDFDocument::__exit__)
         .def("render_page", &PDFDocument::render_page, render_page_docstring,
              "page_index"_a, "dpi"_a=72);
+
+#ifdef VERSION_INFO
+    m.attr("__version__") = VERSION_INFO;
+#endif
 }
