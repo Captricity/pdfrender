@@ -1,12 +1,11 @@
 #include <algorithm>
 #include <memory>
 #include <poppler/cpp/poppler-document.h>
-#include <poppler/cpp/poppler-page.h>
 #include <poppler/cpp/poppler-page-renderer.h>
+#include <poppler/cpp/poppler-page.h>
 #include <pybind11/pybind11.h>
 using namespace std;
 namespace py = pybind11;
-
 
 class PDFDocument
 {
@@ -34,10 +33,10 @@ public:
 
     PDFDocument(const PDFDocument& other) = delete;
 
-    PDFDocument(PDFDocument&& other):
-        doc(move(other.doc)),
-        num_pages(other.num_pages),
-        file_bytes(move(other.file_bytes))
+    PDFDocument(PDFDocument&& other)
+        : doc(move(other.doc))
+        , num_pages(other.num_pages)
+        , file_bytes(move(other.file_bytes))
     {
         other.num_pages = 0;
     }
@@ -123,15 +122,16 @@ public:
     }
 
 private:
-    PDFDocument(poppler::document* document, const char* file_bytes):
-        doc(document), num_pages(document->pages()), file_bytes(file_bytes)
+    PDFDocument(poppler::document* document, const char* file_bytes)
+        : doc(document)
+        , num_pages(document->pages())
+        , file_bytes(file_bytes)
     {}
 
     unique_ptr<poppler::document> doc;
     int num_pages = 0;
     unique_ptr<const char[]> file_bytes;
 };
-
 
 PYBIND11_MODULE(pdfrender, m)
 {
@@ -140,7 +140,7 @@ PYBIND11_MODULE(pdfrender, m)
     m.doc() = "PDF rendering";
 
     const auto frombytes_docstring =
-R"(Opens a PDF document using the raw bytes of the PDF file.
+        R"(Opens a PDF document using the raw bytes of the PDF file.
 
     Args:
         bytes: The raw bytes of the PDF file.
@@ -153,7 +153,7 @@ R"(Opens a PDF document using the raw bytes of the PDF file.
 )";
 
     const auto open_docstring =
-R"(Opens a PDF document given the file name.
+        R"(Opens a PDF document given the file name.
 
     Args:
         filename: the filename to open.
@@ -166,7 +166,7 @@ R"(Opens a PDF document given the file name.
 )";
 
     const auto render_page_docstring =
-R"(Renders a page of the PDF document as a PIL image.
+        R"(Renders a page of the PDF document as a PIL image.
 
     Args:
         page_index: 0-based index of the page to render
@@ -185,8 +185,7 @@ R"(Renders a page of the PDF document as a PIL image.
         .def("__len__", &PDFDocument::size)
         .def("__enter__", &PDFDocument::__enter__)
         .def("__exit__", &PDFDocument::__exit__)
-        .def("render_page", &PDFDocument::render_page, render_page_docstring,
-             "page_index"_a, "dpi"_a=72);
+        .def("render_page", &PDFDocument::render_page, render_page_docstring, "page_index"_a, "dpi"_a = 72);
 
 #ifdef VERSION_INFO
     m.attr("__version__") = VERSION_INFO;
