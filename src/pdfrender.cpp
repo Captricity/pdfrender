@@ -23,7 +23,7 @@ public:
         return PDFDocument(document, file_bytes);
     }
 
-    static PDFDocument fromfile(const string& filename)
+    static PDFDocument open(const string& filename)
     {
         auto document = poppler::document::load_from_file(filename);
         if (!document || document->is_locked())
@@ -42,6 +42,18 @@ public:
         other.num_pages = 0;
     }
 
+    void close()
+    {
+        this->file_bytes.reset();
+        this->doc.reset();
+        this->num_pages = 0;
+    }
+
+    bool closed() const
+    {
+        return !this->doc;
+    }
+
     PDFDocument& __enter__()
     {
         return *this;
@@ -49,9 +61,7 @@ public:
 
     void __exit__(py::object, py::object, py::object)
     {
-        this->file_bytes.reset();
-        this->doc.reset();
-        this->num_pages = 0;
+        this->close();
     }
 
     py::object render_page(int page_index, int dpi)
@@ -77,12 +87,20 @@ public:
         case poppler::image::format_invalid:
             return py::none();
         case poppler::image::format_mono:
+            mode = "1";
+            buffer_size = ((image.width() + 7) / 8) * image.height();
+            break;
+        case poppler::image::format_gray8:
             mode = "L";
             buffer_size = image.width() * image.height();
             break;
         case poppler::image::format_rgb24:
             buffer_size = image.width() * image.height() * 3;
             mode = "RGB";
+            break;
+        case poppler::image::format_bgr24:
+            buffer_size = image.width() * image.height() * 3;
+            mode = "BGR";
             break;
         case poppler::image::format_argb32:
             buffer_size = image.width() * image.height() * 4;
@@ -134,7 +152,7 @@ R"(Opens a PDF document using the raw bytes of the PDF file.
         InvalidArgument exception if the file is invalid, or if the file is password-locked.
 )";
 
-    const auto fromfile_docstring =
+    const auto open_docstring =
 R"(Opens a PDF document given the file name.
 
     Args:
@@ -144,7 +162,7 @@ R"(Opens a PDF document given the file name.
         A PDFDocument object
 
     Raises:
-        InvalidArgument exception if the file is invalid, or if the file is password-locked.
+        InvalidArgument exception if the file is an invalid pdf file, or if the file is password-locked.
 )";
 
     const auto render_page_docstring =
@@ -152,16 +170,18 @@ R"(Renders a page of the PDF document as a PIL image.
 
     Args:
         page_index: 0-based index of the page to render
-        dpi (optional): the dpi to render the image at
+        dpi (optional): the dpi to render the image at, defaults to 72
 
     Returns:
         The PIL image, or None if unsuccessful.
-        The image can have mode 'L', 'RGB', or 'RGBA'
+        The image can have mode '1', 'L', 'RGB', or 'RGBA'
 )";
 
     py::class_<PDFDocument>(m, "PDFDocument")
         .def_static("frombytes", &PDFDocument::frombytes, frombytes_docstring, "bytes"_a)
-        .def_static("fromfile", &PDFDocument::fromfile, fromfile_docstring, "filename"_a)
+        .def_static("open", &PDFDocument::open, open_docstring, "filename"_a)
+        .def("close", &PDFDocument::close)
+        .def_property_readonly("closed", &PDFDocument::closed)
         .def("__len__", &PDFDocument::size)
         .def("__enter__", &PDFDocument::__enter__)
         .def("__exit__", &PDFDocument::__exit__)
