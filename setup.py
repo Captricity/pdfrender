@@ -31,6 +31,7 @@ ext_modules = [
             get_pybind_include(),
             get_pybind_include(user=True),
         ],
+        library_dirs=['/usr/local/lib'],
         libraries=libraries,
         language='c++'
     ),

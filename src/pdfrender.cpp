@@ -13,13 +13,13 @@ public:
     static PDFDocument frombytes(py::buffer bytes)
     {
         py::buffer_info info = bytes.request();
-        char* const file_bytes = new char[info.size];
-        std::copy_n(reinterpret_cast<char*>(info.ptr), info.size, file_bytes);
-        auto document = poppler::document::load_from_raw_data(file_bytes, info.size);
+        auto data_ptr = reinterpret_cast<char*>(info.ptr);
+        vector<char> file_bytes(data_ptr, data_ptr + info.size);
+        auto document = poppler::document::load_from_data(&file_bytes);
         if (!document || document->is_locked())
             throw std::invalid_argument("invalid pdf file");
 
-        return PDFDocument(document, file_bytes);
+        return PDFDocument(document);
     }
 
     static PDFDocument open(const string& filename)
@@ -28,7 +28,7 @@ public:
         if (!document || document->is_locked())
             throw std::invalid_argument("invalid pdf file");
 
-        return PDFDocument(document, nullptr);
+        return PDFDocument(document);
     }
 
     PDFDocument(const PDFDocument& other) = delete;
@@ -36,14 +36,12 @@ public:
     PDFDocument(PDFDocument&& other)
         : doc(move(other.doc))
         , num_pages(other.num_pages)
-        , file_bytes(move(other.file_bytes))
     {
         other.num_pages = 0;
     }
 
     void close()
     {
-        this->file_bytes.reset();
         this->doc.reset();
         this->num_pages = 0;
     }
@@ -73,7 +71,9 @@ public:
 
         std::unique_ptr<poppler::page> page(this->doc->create_page(page_index));
         poppler::page_renderer renderer;
-        renderer.set_render_hints(0x7);
+        renderer.set_render_hints(
+            poppler::page_renderer::antialiasing | poppler::page_renderer::text_antialiasing
+            | poppler::page_renderer::text_hinting);
         auto image = renderer.render_page(page.get(), dpi, dpi);
         if (!image.is_valid())
             return py::none();
@@ -122,15 +122,13 @@ public:
     }
 
 private:
-    PDFDocument(poppler::document* document, const char* file_bytes)
+    PDFDocument(poppler::document* document)
         : doc(document)
         , num_pages(document->pages())
-        , file_bytes(file_bytes)
     {}
 
     unique_ptr<poppler::document> doc;
     int num_pages = 0;
-    unique_ptr<const char[]> file_bytes;
 };
 
 PYBIND11_MODULE(pdfrender, m)
