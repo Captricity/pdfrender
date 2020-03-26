@@ -10,7 +10,7 @@ python:
     - "3.6"
 
 install:
-    - pip install pybind11==2.2.4 Pillow==5.4.1
+    - pip install pybind11==2.4.3 Pillow==5.4.1
 
 script:
     - python setup.py test

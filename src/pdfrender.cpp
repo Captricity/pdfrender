@@ -89,18 +89,22 @@ public:
             mode = "1";
             buffer_size = ((image.width() + 7) / 8) * image.height();
             break;
+#if POPPLER_VERSION_MINOR >= 65
         case poppler::image::format_gray8:
             mode = "L";
             buffer_size = image.width() * image.height();
             break;
+#endif
         case poppler::image::format_rgb24:
             buffer_size = image.width() * image.height() * 3;
             mode = "RGB";
             break;
+#if POPPLER_VERSION_MINOR >= 65
         case poppler::image::format_bgr24:
             buffer_size = image.width() * image.height() * 3;
             mode = "BGR";
             break;
+#endif
         case poppler::image::format_argb32:
             buffer_size = image.width() * image.height() * 4;
             mode = "RGBA";
