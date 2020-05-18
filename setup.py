@@ -61,7 +61,7 @@ class BuildExt(build_ext):
 setup(
     name='pdfrender',
     description='PDF Renderer',
-    version='0.3.0',
+    version='0.3.1',
     setup_requires=['pybind11>=2.2.4', 'Pillow>=4.3.0,<=6.2.2'],
     install_requires=['pybind11>=2.2.4', 'Pillow>=4.3.0,<=6.2.2'],
     ext_modules=ext_modules,
