@@ -3,9 +3,13 @@
 #include <poppler/cpp/poppler-document.h>
 #include <poppler/cpp/poppler-page-renderer.h>
 #include <poppler/cpp/poppler-page.h>
+#include <poppler/cpp/poppler-version.h>
 #include <pybind11/pybind11.h>
 using namespace std;
 namespace py = pybind11;
+
+#define STRINGIFY(x) #x
+#define MACRO_STRINGIFY(x) STRINGIFY(x)
 
 class PDFDocument
 {
@@ -129,7 +133,7 @@ private:
     PDFDocument(poppler::document* document)
         : doc(document)
         , num_pages(document->pages())
-    {}
+    { }
 
     unique_ptr<poppler::document> doc;
     int num_pages = 0;
@@ -190,6 +194,6 @@ PYBIND11_MODULE(pdfrender, m)
         .def("render_page", &PDFDocument::render_page, render_page_docstring, "page_index"_a, "dpi"_a = 72);
 
 #ifdef VERSION_INFO
-    m.attr("__version__") = VERSION_INFO;
+    m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
 #endif
 }

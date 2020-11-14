@@ -1,71 +1,32 @@
 #!/usr/bin/env python
 from setuptools import setup, Extension
-from setuptools.command.build_ext import build_ext
-import sys
+from pybind11.setup_helpers import Pybind11Extension, build_ext
 
-
-class get_pybind_include(object):
-    """Helper class to determine the pybind11 include path
-    The purpose of this class is to postpone importing pybind11
-    until it is actually installed, so that the ``get_include()``
-    method can be invoked. """
-
-    def __init__(self, user=False):
-        self.user = user
-
-    def __str__(self):
-        import pybind11
-        return pybind11.get_include(self.user)
-
+__version__ = '0.3.2'
 
 libraries = ['poppler-cpp']
 
-
 ext_modules = [
-    Extension(
+    Pybind11Extension(
         'pdfrender',
         [
             'src/pdfrender.cpp',
         ],
-        include_dirs=[
-            get_pybind_include(),
-            get_pybind_include(user=True),
-        ],
         library_dirs=['/usr/local/lib'],
-        libraries=libraries,
-        language='c++'
+        libraries=['poppler-cpp'],
+        language='c++',
+        define_macros=[('VERSION_INFO', __version__)],
     ),
 ]
-
-
-class BuildExt(build_ext):
-    def build_extensions(self):
-        compiler_type = self.compiler.compiler_type
-
-        opts = ['-O2']
-        if sys.platform == 'darwin':
-            opts += ['-stdlib=libc++', '-mmacosx-version-min=10.8']
-
-        if compiler_type == 'unix':
-            opts.extend([
-                '-DVERSION_INFO="%s"' % self.distribution.get_version(),
-                '-std=c++14'
-            ])
-
-        for ext in self.extensions:
-            ext.extra_compile_args = opts
-
-        build_ext.build_extensions(self)
-
 
 setup(
     name='pdfrender',
     description='PDF Renderer',
     version='0.3.2',
-    setup_requires=['pybind11>=2.2.3', 'Pillow>=4.3.0,<=6.2.2'],
-    install_requires=['pybind11>=2.2.3', 'Pillow>=4.3.0,<=6.2.2'],
+    setup_requires=['Pillow>=8.0.1'],
+    install_requires=['Pillow>=8.0.1'],
     ext_modules=ext_modules,
-    cmdclass={'build_ext': BuildExt},
+    cmdclass={'build_ext': build_ext},
     test_suite='tests',
     zip_safe=False,
 )

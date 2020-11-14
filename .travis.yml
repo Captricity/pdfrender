@@ -1,4 +1,4 @@
-dist: bionic
+dist: focal
 addons:
     apt:
         packages:
@@ -6,11 +6,10 @@ addons:
 
 language: python
 python:
-    - "2.7"
-    - "3.6"
+    - "3.8"
 
 install:
-    - pip install pybind11==2.4.3 Pillow==5.4.1
+    - pip install pybind11==2.6.1 Pillow==8.0.1
 
 script:
     - python setup.py test
